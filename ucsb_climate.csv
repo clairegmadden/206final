@@ -1,8 +1,4 @@
-Data from: UCSB Campus Climate Survey (2014),,,,
-By Ranklin & Associates Consulting,,,,
-,,,,
-Table 17. Ratings of Perceptions of Overall Campus Climate for Various Races/Ethnicities  (counts),,,,
-,Very Respectful,Respectful,Disrespectful,Very Disrespectful
+race,very_respectful,respectful,disrespectful,very_disrespectful
 African American/African/Black,1950,4158,562,121
 American Indian/Alaskan Native,1882,3864,271,78
 Asian/Asian American,2132,4329,424,57
