@@ -11,13 +11,24 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r load packages}
 
+library(tidyverse)
 
 
 
 
 ```
 
-```{r read in data}
+```{r read in data, echo = FALSE, message = FALSE}
+pesticide_residues <- read_csv("PesticideResidues.csv")
+
+ca_county_pesticides <- read_csv("ca_county_pesticides.csv")
+
+climate_opinion <- read_csv("climate_opinion.csv")
+
+tmas_df <- read_csv("tmas_df.csv")
+
+ucsb_climate <- read_csv("ucsb_climate.csv")
+
 
 ```
 
@@ -28,6 +39,25 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
+###PART 2.
+```{r}
+
+```
+
+
+
+###PART 3. 
+```{r}
+
+```
+
+
+
+
+###PART 4.
+```{r}
+
+```
 
 
 
