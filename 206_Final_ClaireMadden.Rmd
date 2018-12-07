@@ -82,6 +82,31 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 #a. Summarize/describe any exploratory analyses that you performed in order to decide on the appropriate test to compare concentrations. Include exploratory graphs that informed your decision (you don’t need to finalize or include figure captions here). Based on those outcomes, justify your choice of test.
 #b. In 1-2 sentences, state your final results in a format that would be suitable for publication in a professional report or article.
 
+# simplify dataframe to include only the commodities and pesticide of interest
+pesticide_simple <- pesticide_residues %>% 
+  filter(commodity == "STRAWBERRY (ALL OR UNSPEC)" |
+           commodity == "CARROTS (ROOT CROP)") %>% 
+  filter(chemical_detected == "PYRACLOSTROBIN")
+
+# explore the distribution of the data
+exp_hist <- ggplot(pesticide_simple, aes(x = amount_detected))+
+  geom_histogram(bins = 10)+
+  facet_wrap(~commodity)
+
+
+exp_hist
+# doesn't look like a normal distribution
+# carrots only have 15 observations
+# strawberries have 40 observations
+
+
+exp_qq <- ggplot(pesticide_simple, aes(sample = amount_detected))+
+  geom_qq()+
+  facet_wrap(~commodity)
+
+exp_qq
+# very much not normal looking
+# will go with a Mann Whitney U test (????)
 
 
 
