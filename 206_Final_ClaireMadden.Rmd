@@ -12,8 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r load packages}
 
 library(tidyverse)
-
-
+library(ggpubr)
+library(RColorBrewer)
 
 
 ```
@@ -35,12 +35,28 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 
 ###PART 1.
 ```{r}
+#Explore relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening (i.e., ‘happening’ should be your dependent variable). in climate_opinion dataframe
+
+#a. A brief statement (1-sentence) explaining the type of analysis you chose to perform, and why it is appropriate.
+#b. An exploratory correlation matrix for all continuous variables (make it readable, but it does not need to be finalized and you do not need to add a figure caption).
+#c. A finalized table of results for your analyses (you may present more than one model), with a figure caption.
+#d. Choose two coefficients in the model that you find interesting (either because they are expected or unexpected). For each, write a single sentence explaining what that coefficient means in terms of an expected change in the dependent variable.
+#e. Based on diagnostic plots, describe (1 - 2 sentences) if you have concerns about heteroscedasticity or normality of residuals for your model(s). You do not need to include the diagnostic plots in your final document.
+
+
+
 
 ```
 
 
 ###PART 2.
 ```{r}
+#Explore associations between race/ethnicity and perceived campus respect based on counts in ‘ucsb_climate.csv.’
+#a. In 1 - 2 sentences: What type of analysis will you perform? In the context of this task, what research question will your analysis answer?
+#b. A one sentence finalized statement of the statistical results for the analysis you decided on in (a). You are not expected to do post-hoc testing, but you can if you want to.
+#c. A finalized figure or table that clearly shows counts and/or proportions of respondents’ perceptions of campus respect for each race/ethnicity reporting. Include a caption.
+#d. A concise 2 - 3 sentence discussion of interesting differences and/or similarities across groups, and notable big picture trends.
+
 
 ```
 
@@ -48,16 +64,68 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 
 ###PART 3. 
 ```{r}
+#explore effects of sex and age on probability that a person will respond True or False to the statement: “I am usually self-conscious.” Data in ‘tmas_df.csv’ are accessed and updated from openpsychometrics.org (a cool site for open-source survey data).
+#a. A finalized table of model results and statistics. Include a table caption.
+#b. A finalized graph showing predicted probabilities for True/False responses, separated by sex over a range of ages, with standard errors included. You do NOT need to include a figure caption.
+#c. In 2 - 3 sentences, describe trends/differences/similarities that are seen in the graph, and how those align with the results you report in (a).
+
+
+
 
 ```
-
 
 
 
 ###PART 4.
 ```{r}
+#Is there a significant difference in pyraclostrobin concentrations in strawberries (STRAWBERRY (ALL OR UNSPEC)) and carrots (CARROTS (ROOT CROP))? use PesticideResidues dataframe
+#a. Summarize/describe any exploratory analyses that you performed in order to decide on the appropriate test to compare concentrations. Include exploratory graphs that informed your decision (you don’t need to finalize or include figure captions here). Based on those outcomes, justify your choice of test.
+#b. In 1-2 sentences, state your final results in a format that would be suitable for publication in a professional report or article.
+
+
+
+
 
 ```
 
+
+###PART 5. 
+```{r}
+#prepare a final graph (you choose what type) of the top 10 California counties ranked by pounds of active pesticide ingredient applied per square mile. use ca_county_pesticides
+#1. Any code used to wrangle the data and prepare your final graph.
+#2. Your beautifully finalized graph of the top 10 California counties (by pesticide applied per square mile). You do not need to include a figure caption.
+
+# create a new dataframe with a column that calculates pesticide per square mile
+# arrange from highest to lowest pesticide per square mile
+# keep only the top 10
+pesticide_df <- ca_county_pesticides %>% 
+  mutate(pounds_per_mile = pounds_active/area) %>% 
+  arrange(-pounds_per_mile) %>% 
+  head(10)
+
+# keep current levels so the graph doesnt reorder county alphabetically but order is based on highest to lowest pesticide per square mile 
+
+pesticide_factor <- pesticide_df %>% 
+  mutate(county = factor(county, levels = county))
+  
+
+# create a column graph!
+pesticide_graph <- ggplot(pesticide_factor, aes(x = county, y = pounds_per_mile))+
+  geom_col(aes(fill = county), show.legend = FALSE)+
+  scale_fill_brewer(palette = "Spectral")+
+  theme_classic()+
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,9000),
+                     breaks = seq(0,9000, by = 1000))+
+  theme(axis.text.x = element_text(angle = 45, hjust = .9))+
+  labs(x = "County",
+       y = "Pesticide Applied \n(pounds/square mile)",
+       title = "10 California Counties with the \nHighest Pesticide Application per Square Mile")
+
+
+  
+pesticide_graph
+
+```
 
 
