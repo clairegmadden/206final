@@ -9,13 +9,15 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load packages}
+```{r load packages, echo = FALSE}
 
 library(tidyverse)
 library(ggpubr)
 library(RColorBrewer)
 library(effsize)
 library(corrplot)
+library(car)
+library(stargazer)
 
 ```
 
@@ -35,16 +37,29 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 
 
 ###PART 1.
-```{r}
+```{r part 1 instructions}
 #Explore relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening (i.e., ‘happening’ should be your dependent variable). in climate_opinion dataframe
 
+#happening: Estimated percentage in state who think that global warming is happening
+#consensus: Estimated percentage who believe that most scientists think global warming is happening
+#discuss: Estimated percentage who discuss global warming occassionally or often with friends and family
+#mediaweekly: Estimated percentage who hear about global warming in the media at least weekly
+#bachelors*: Estimated percentage (25 years and older) attained Bachelor’s degree
+#poverty*: Estimated poverty rate (by household income)
+#coastline: yes = state has ocean coastline, no = state does not have ocean coastline
 
+```
+
+
+```{r 1a}
 #a. A brief statement (1-sentence) explaining the type of analysis you chose to perform, and why it is appropriate.
-#multiple linear regression
+# multiple linear regression
 # the dependent variable (proportion of people who believe global warming is happening is dependent on multiple other variables like... )
+```
 
+
+```{r 1b}
 #b. An exploratory correlation matrix for all continuous variables (make it readable, but it does not need to be finalized and you do not need to add a figure caption).
-
 
 cor_df <- cor(climate_opinion[2:7])
 
@@ -58,36 +73,95 @@ col_df <- climate_opinion %>%
   select(consensus, discuss, mediaweekly, bachelors)
 
 pairs(col_df)
-
-
-
 # consensus and discuss seem to be pretty correllated 
 
-#c. A finalized table of results for your analyses (you may present more than one model), with a figure caption.
+```
 
+
+
+
+```{r 1models}
+#saturated model
 climate_lm <- lm(happening ~ consensus + discuss + mediaweekly + bachelors + poverty_rate + coastline, data = climate_opinion)
 
 summary(climate_lm)
+#mediaweekly has negative coefficient which seems misleading
 
+#model -discuss
 climate_lm_1 <- lm(happening ~ consensus + mediaweekly + bachelors + poverty_rate + coastline, data = climate_opinion)
 
 summary(climate_lm_1)
+#mediaweekly still negative
 
+
+#model -consensus
 climate_lm_2 <- lm (happening ~ discuss + mediaweekly + bachelors + poverty_rate + coastline, data = climate_opinion)
 
 summary(climate_lm_2)
+#mediaweekly still negative
 
+#model -discuss -consensus
 climate_lm_3 <- lm(happening ~ bachelors + poverty_rate + coastline, data = climate_opinion)
 
 summary(climate_lm_3)
+#maybe took out too many variables
 
+climate_lm_4 <- lm(happening ~ bachelors + poverty_rate + coastline + mediaweekly, data = climate_opinion)
+
+summary(climate_lm_4)
+# all coefficients seem to make sense, all significant
+
+
+vif(climate_lm)
+# consensus and discuss are both very high
+vif(climate_lm_1)
+# consensus still high
+vif(climate_lm_2)
+# discuss is a bit high
+vif(climate_lm_3)
+# no concerning vif values
+vif(climate_lm_4)
+# all seem good
+
+AIC(climate_lm) #122.45
+AIC(climate_lm_1) #136.56
+AIC(climate_lm_2) #212.61
+AIC(climate_lm_3) #249.83
+AIC(climate_lm_4) #243.07
+```
+
+
+```{r 1c, results = 'asis', header = FALSE, echo = FALSE}
+#c. A finalized table of results for your analyses (you may present more than one model), with a figure caption.
+
+lm_table <- stargazer(climate_lm, 
+          type = 'html', 
+          digits = 3,
+          style = "aer",
+          title = "Table X: Climate Opinion Regression Results", 
+          dep.var.labels = c("happening"),
+          covariate.labels = c("no"))
+
+
+lm_table
+```
+
+
+```{r 1d}
 #d. Choose two coefficients in the model that you find interesting (either because they are expected or unexpected). For each, write a single sentence explaining what that coefficient means in terms of an expected change in the dependent variable.
 
+```
 
+
+
+```{r}
 #e. Based on diagnostic plots, describe (1 - 2 sentences) if you have concerns about heteroscedasticity or normality of residuals for your model(s). You do not need to include the diagnostic plots in your final document.
 
 plot(climate_lm)
 # heteroscedasticity seems good on these ones
+
+plot(climate_lm_4)
+# also seems legit - well distributed no obvious issues with heteroscedasticity
 
 
 ```
