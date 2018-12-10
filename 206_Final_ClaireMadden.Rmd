@@ -9,15 +9,17 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load packages, echo = FALSE}
+```{r load packages, include = FALSE}
 
 library(tidyverse)
+library(knitr)
 library(ggpubr)
 library(RColorBrewer)
 library(effsize)
 library(corrplot)
 library(car)
 library(stargazer)
+library(kableExtra)
 
 ```
 
@@ -37,7 +39,7 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 
 
 ###PART 1.
-```{r part 1 instructions}
+```{r 1, include = FALSE}
 #Explore relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening (i.e., ‘happening’ should be your dependent variable). in climate_opinion dataframe
 
 #happening: Estimated percentage in state who think that global warming is happening
@@ -46,21 +48,22 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 #mediaweekly: Estimated percentage who hear about global warming in the media at least weekly
 #bachelors*: Estimated percentage (25 years and older) attained Bachelor’s degree
 #poverty*: Estimated poverty rate (by household income)
-#coastline: yes = state has ocean coastline, no = state does not have ocean coastline
+#coastline: yes = state has ocean coastline, no = state does not have ocean coastline (no is reference)
 
 ```
 
 
-```{r 1a}
+```{r 1a, include = FALSE}
 #a. A brief statement (1-sentence) explaining the type of analysis you chose to perform, and why it is appropriate.
 # multiple linear regression
 # the dependent variable (proportion of people who believe global warming is happening is dependent on multiple other variables like... )
 ```
+The appropriate analysis for exploring the relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening is to use a Multiple Linear Regression because it makes logical sense that an increase in information, education, and immediate impact would be linearly related to opinion on the topic of global warming. 
 
-
-```{r 1b}
+```{r 1b, echo = FALSE}
 #b. An exploratory correlation matrix for all continuous variables (make it readable, but it does not need to be finalized and you do not need to add a figure caption).
 
+# correlation matrix for continuous variables
 cor_df <- cor(climate_opinion[2:7])
 
 corrplot(cor_df,
@@ -69,18 +72,24 @@ corrplot(cor_df,
          tl.col = "black",
          tl.cex = 0.5)
 
-col_df <- climate_opinion %>% 
-  select(consensus, discuss, mediaweekly, bachelors)
 
-pairs(col_df)
-# consensus and discuss seem to be pretty correllated 
 
 ```
 
 
 
 
-```{r 1models}
+```{r 1models, include= FALSE}
+# check for colinearity
+col_df <- climate_opinion %>% 
+  select(consensus, discuss, mediaweekly, bachelors)
+
+cor(col_df)
+# consensus and discuss seem to be pretty correllated 
+# consensus also seems related to bachelors
+# discuss related to media weekly
+
+
 #saturated model
 climate_lm <- lm(happening ~ consensus + discuss + mediaweekly + bachelors + poverty_rate + coastline, data = climate_opinion)
 
@@ -100,13 +109,14 @@ climate_lm_2 <- lm (happening ~ discuss + mediaweekly + bachelors + poverty_rate
 summary(climate_lm_2)
 #mediaweekly still negative
 
-#model -discuss -consensus
+#model -discuss -consensus -mediaweekly 
 climate_lm_3 <- lm(happening ~ bachelors + poverty_rate + coastline, data = climate_opinion)
 
 summary(climate_lm_3)
 #maybe took out too many variables
 
-climate_lm_4 <- lm(happening ~ bachelors + poverty_rate + coastline + mediaweekly, data = climate_opinion)
+# -mediaweekly -consensus
+climate_lm_4 <- lm(happening ~ bachelors + poverty_rate + coastline + discuss, data = climate_opinion)
 
 summary(climate_lm_4)
 # all coefficients seem to make sense, all significant
@@ -127,82 +137,220 @@ AIC(climate_lm) #122.45
 AIC(climate_lm_1) #136.56
 AIC(climate_lm_2) #212.61
 AIC(climate_lm_3) #249.83
-AIC(climate_lm_4) #243.07
+AIC(climate_lm_4) #214.90, one of the higher aic values, but model makes the most logical sense
 ```
 
 
 ```{r 1c, results = 'asis', header = FALSE, echo = FALSE}
 #c. A finalized table of results for your analyses (you may present more than one model), with a figure caption.
 
-lm_table <- stargazer(climate_lm, 
+lm_table <- stargazer(climate_lm_4, 
           type = 'html', 
-          digits = 3,
+          digits = 2,
           style = "aer",
           title = "Table X: Climate Opinion Regression Results", 
-          dep.var.labels = c("happening"),
-          covariate.labels = c("no"))
+          dep.var.labels = c("Global Warming is Happening"),
+          covariate.labels = c("Bachelors Degree",
+                               "Poverty Rate",
+                               "State with Coastline",
+                               "Discuss with Friends/Family"))
+  
 
-
-lm_table
 ```
 
 
-```{r 1d}
+```{r 1d, include = FALSE}
 #d. Choose two coefficients in the model that you find interesting (either because they are expected or unexpected). For each, write a single sentence explaining what that coefficient means in terms of an expected change in the dependent variable.
 
 ```
 
+It is interesting yet expected that the proportion of people who think global warming is happening is 2.5% greater among people who live in states with coastline when compared to those living in states without coastline.
+<br>
+<br>
+Another interesting and surprising coefficient is that the proportion of respondents whi think global warming is happening is only 0.36% greater among people who recieved a Bachelors degree than among those who do not have a Bachelors degree. 
 
-
-```{r}
+```{r, include=FALSE}
 #e. Based on diagnostic plots, describe (1 - 2 sentences) if you have concerns about heteroscedasticity or normality of residuals for your model(s). You do not need to include the diagnostic plots in your final document.
 
-plot(climate_lm)
-# heteroscedasticity seems good on these ones
-
 plot(climate_lm_4)
-# also seems legit - well distributed no obvious issues with heteroscedasticity
+# seems legit - well distributed no obvious issues with heteroscedasticity, normality of the qq is a little concerning on the tails, but most of the variances are right along the line
 
 
 ```
-
+The model presented does not present significant concerns for homoscedasticity and the residual variance seems normal. The assumption of normality presents a slight cause for concern, as the upper and lower tail of the residuals does not follow a pattern of normal distribution, however the majority of the residuals do appear to be normally distributed. 
 
 ###PART 2.
-```{r}
+
+```{r 2, include=FALSE}
 #Explore associations between race/ethnicity and perceived campus respect based on counts in ‘ucsb_climate.csv.’
+```
+
+```{r 2a, include=FALSE}
 
 #a. In 1 - 2 sentences: What type of analysis will you perform? In the context of this task, what research question will your analysis answer?
+# chi square
+# is there a significant effect of race on perceived campus respect?
+# H0: there is no effect
 
+```
+In order to determine if there is a significant effect of race on individual's perception of campus respect at UCSB, a chi-square test is used to test if proportions of respondents in different groups are significantly different. 
+
+
+```{r 2b, include = FALSE}
 #b. A one sentence finalized statement of the statistical results for the analysis you decided on in (a). You are not expected to do post-hoc testing, but you can if you want to.
 
+
+# make rownames race categories
+ucsb_climate_chi <- ucsb_climate %>% 
+  select(-race)
+
+rownames(ucsb_climate_chi) <- c("AfricanAmerican", "AmericanIndian", "Asian", "Hispanic", "MiddleEastern", "PacificIslander", "White") 
+
+# make a proportion table
+prop_table <- prop.table(as.matrix(ucsb_climate_chi), 1)
+
+prop_table
+
+# run chisq to test for significant effect
+chi_test <- chisq.test(ucsb_climate_chi)
+
+chi_test
+# there is a significant effect of race on percieved campus respect
+# p < 0.001
+
+```
+Based on results from the UCSB Campus Climate Survey (2014), race identity of respondents had a significant effect on the perception of campus climate [($\chi^2$(`r chi_test$parameter`) = `r round(chi_test$statistic, 0)`,  p < 0.001.]
+
+
+
+TABLE CAPTION
+```{r 2c, echo = FALSE}
 #c. A finalized figure or table that clearly shows counts and/or proportions of respondents’ perceptions of campus respect for each race/ethnicity reporting. Include a caption.
 
+respect_table <- kable(ucsb_climate, col.names = c("Race", "Very Respectful", "Respectful", "Disrespectful", "Very Disrespectful"), align = "l") %>% 
+  kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
+
+
+respect_table 
+
+```
+
+
+```{r 2d, include=FALSE}
 #d. A concise 2 - 3 sentence discussion of interesting differences and/or similarities across groups, and notable big picture trends.
 
-
 ```
-
-
+The results show that the majority of each race group would classifiy the campus environment at UCSB as respectful or very respectful, however there were larger proportions of respodents that felt the campus environment was either disrespectful or very disrespectful within the African American, Hispanic and Middle Eastern groups. Additionally, for all race groups except White, more a larger portion of respondents felt the campus was respectful compared to very respectful, while responses within White students were nearly equal for both respectful and very respectful. 
 
 ###PART 3. 
-```{r}
+```{r 3, include=FALSE}
 #explore effects of sex and age on probability that a person will respond True or False to the statement: “I am usually self-conscious.” Data in ‘tmas_df.csv’ are accessed and updated from openpsychometrics.org (a cool site for open-source survey data).
+# true = 1
+# false = 0
+# sex_mf reference = female
+
+binary_df <- tmas_df %>% 
+  mutate(
+    response = case_when(
+      response == "True" ~ 1,
+      response == "False" ~ 0
+    )
+  )
+  
+blr <- glm(response ~ age + sex_mf, family = "binomial", data = binary_df)
+summary(blr)
+
+# age significantly predicts response to "are you self conscious"
+# a one year increase in age will result in a 0.03 decrease in the likelihood of a respondent answering true
+```
+
+
+TABLE CAPTION
+```{r 3a, results = 'asis', header = FALSE, echo = FALSE}
+
 #a. A finalized table of model results and statistics. Include a table caption.
+
+blr_table <- stargazer(blr, 
+          type = 'html', 
+          digits = 2,
+          style = "aer",
+          title = "Table X: Effects of Sex and Age on Self Consciousness", 
+          dep.var.labels = c("Self Conscious"),
+          covariate.labels = c("Age",
+                               "Sex"))
+
+# reference level for sex is female
+
+```
+
+
+
+
+
+
+```{r 3b, echo = FALSE}
 #b. A finalized graph showing predicted probabilities for True/False responses, separated by sex over a range of ages, with standard errors included. You do NOT need to include a figure caption.
+
+seq_age <- rep(seq(from = 0, to = 100), 2) # Create a sequence from 0 to 100, twice (one will be "Male" and one will be "Female")
+
+f_101 <- rep("Female", 101) # Repeat 'Female' 101 times
+m_101 <- rep("Male", 101) # Repeat 'Male' 101 times
+mf_101 <- c(f_101, m_101) # Combine them into a single vector
+
+# Combine the age and sex sequences into a single data frame
+tmas_newdata <- data.frame(seq_age, mf_101) # make column names match variables in the model!
+colnames(tmas_newdata) <- c("age","sex_mf")
+
+# predict probabilities for every age based on the model
+predicted_probs <- predict(blr, newdata = tmas_newdata, type = "response", se.fit = TRUE)
+
+
+# create a new data frame with predicited probabilities and standard errors
+graph_data <- data.frame(tmas_newdata, predicted_probs$fit, predicted_probs$se.fit)
+
+# rename columns
+colnames(graph_data) <- c("Age", "Sex", "Probability", "SE")
+
+
+# graph predicted probabilities with standard error ribbons
+ggplot(graph_data, aes(x = Age, y = Probability))+
+  facet_wrap(~Sex)+
+  geom_line(aes(color = Sex))+
+  geom_ribbon(aes(ymin = Probability - SE, ymax = Probability + SE, fill = Sex), alpha = 0.5)+
+  theme_minimal()+
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0,1))
+
+```
+
+
+
+
+```{r 3c, include = FALSE}
 #c. In 2 - 3 sentences, describe trends/differences/similarities that are seen in the graph, and how those align with the results you report in (a).
 
+# a clear trend among respondents of both sexes is a decline in the number of "true" responses to the question "Am I ususally self-conscious" as age incresed. 
 
+# sex seems to have very little impact on response (nonsignificant pvalue from above) 
 
 
 ```
+
+The graph shows a clear trend among both sexes that as age increases, the probability of a respondent answering "True" to the statement "I am usually self-conscious" decreases, an effect that was significant based on the binomal linear regression. Alternately, sex does not have a significant effect on respondent answers, as can be seen by the similar predicted probabilities between males and females. 
 
 
 
 ###PART 4.
-```{r}
+```{r 4, include = FALSE}
 #Is there a significant difference in pyraclostrobin concentrations in strawberries (STRAWBERRY (ALL OR UNSPEC)) and carrots (CARROTS (ROOT CROP))? use PesticideResidues dataframe
+
+```
+
+
+
+```{r 4a, echo = FALSE}
 #a. Summarize/describe any exploratory analyses that you performed in order to decide on the appropriate test to compare concentrations. Include exploratory graphs that informed your decision (you don’t need to finalize or include figure captions here). Based on those outcomes, justify your choice of test.
-#b. In 1-2 sentences, state your final results in a format that would be suitable for publication in a professional report or article.
+
 
 # simplify dataframe to include only the commodities and pesticide of interest
 pesticide_simple <- pesticide_residues %>% 
@@ -228,19 +376,25 @@ exp_qq <- ggplot(pesticide_simple, aes(sample = amount_detected))+
 
 exp_qq
 # very much not normal looking
-# will go with a Mann Whitney U test (????)
+# will go with a Mann Whitney U test
+
+```
+<br>
+Based on the data exploration above, the data does not seem to be normally distributed, and observations for one group (carrots) are below 30 so the Central Limit Theorem does not apply. Because of this, I will use a Mann Whitney U test to check for significant difference in median pesticide concentration between carrots and strawberries. 
 
 
+```{r 4b, include = FALSE}
+#b. In 1-2 sentences, state your final results in a format that would be suitable for publication in a professional report or article.
 
+# separate carrots and strawberries into their own dataframes
 carrots <- pesticide_simple %>% 
   filter(commodity == "CARROTS (ROOT CROP)")
-
 
 strawberries <- pesticide_simple %>% 
   filter(commodity == "STRAWBERRY (ALL OR UNSPEC)")
 
 
-
+# mann whitney u test
 test <- wilcox.test(strawberries$amount_detected, carrots$amount_detected)
 
 test
@@ -249,20 +403,25 @@ test
 # p < 0.001
 
 
+# test for effect size
 cliffs <- cliff.delta(strawberries$amount_detected, carrots$amount_detected)
 
 cliffs
 
-
 # cliff's delta = 0.695 (large)
+
 ```
+Based on the data of pesticide residues from the California Department of Pesticide Regulation, there is a significant difference in median pesticide quantity detected between carrots and strawberries [W = `r test$statistic`, p < 0.001] and the effect size is large (cliff's delta = `r cliffs$estimate`). 
+
 
 
 ###PART 5. 
-```{r}
+```{r 5, include = FALSE}
 #prepare a final graph (you choose what type) of the top 10 California counties ranked by pounds of active pesticide ingredient applied per square mile. use ca_county_pesticides
-#1. Any code used to wrangle the data and prepare your final graph.
-#2. Your beautifully finalized graph of the top 10 California counties (by pesticide applied per square mile). You do not need to include a figure caption.
+```
+
+```{r 5a}
+#a. Any code used to wrangle the data and prepare your final graph.
 
 # create a new dataframe with a column that calculates pesticide per square mile
 # arrange from highest to lowest pesticide per square mile
@@ -276,7 +435,11 @@ pesticide_df <- ca_county_pesticides %>%
 
 pesticide_factor <- pesticide_df %>% 
   mutate(county = factor(county, levels = county))
-  
+
+```
+
+```{r 5b, echo = FALSE}
+#b. Your beautifully finalized graph of the top 10 California counties (by pesticide applied per square mile). You do not need to include a figure caption.
 
 # create a column graph!
 pesticide_graph <- ggplot(pesticide_factor, aes(x = county, y = pounds_per_mile))+
@@ -288,13 +451,14 @@ pesticide_graph <- ggplot(pesticide_factor, aes(x = county, y = pounds_per_mile)
                      breaks = seq(0,9000, by = 1000))+
   theme(axis.text.x = element_text(angle = 45, hjust = .9))+
   labs(x = "County",
-       y = "Pesticide Applied \n(pounds/square mile)",
+       y = "Pesticide Applied \n(pounds per square mile)",
        title = "10 California Counties with the \nHighest Pesticide Application per Square Mile")
 
 
   
 pesticide_graph
 
-```
 
+
+```
 
