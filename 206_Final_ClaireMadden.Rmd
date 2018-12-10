@@ -57,8 +57,38 @@ ucsb_climate <- read_csv("ucsb_climate.csv")
 #a. A brief statement (1-sentence) explaining the type of analysis you chose to perform, and why it is appropriate.
 # multiple linear regression
 # the dependent variable (proportion of people who believe global warming is happening is dependent on multiple other variables like... )
+
+# data relationship exploration
+happening_by_bachelors <- ggplot(climate_opinion, aes(x = bachelors, y = happening))+
+  geom_point()
+happening_by_bachelors
+# looks like a linear trend
+
+
+happening_by_discuss <- ggplot(climate_opinion, aes(x = discuss, y = happening))+
+  geom_point()
+happening_by_discuss
+# also looks linear
+
+happening_by_consensus <- ggplot(climate_opinion, aes(x = consensus, y = happening))+
+  geom_point()
+happening_by_consensus
+# very linear
+
+
+happening_by_poverty <- ggplot(climate_opinion, aes(x = poverty_rate, y = happening))+
+  geom_point()
+happening_by_poverty
+# doesn't look linear at all
+
+
+happening_by_media <- ggplot(climate_opinion, aes(x = mediaweekly, y = happening))+
+  geom_point()
+happening_by_media
+# very weak linear trend
+
 ```
-The appropriate analysis for exploring the relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening is to use a Multiple Linear Regression because it makes logical sense that an increase in information, education, and immediate impact would be linearly related to opinion on the topic of global warming. 
+The appropriate analysis for exploring the relationships between climate change perspectives, information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening is to use a Multiple Linear Regression because exploratory analysis showed a linear trend between independent continuous variables and the proportion of respondents who think global warming is happening. 
 
 ```{r 1b, echo = FALSE}
 #b. An exploratory correlation matrix for all continuous variables (make it readable, but it does not need to be finalized and you do not need to add a figure caption).
@@ -68,7 +98,7 @@ cor_df <- cor(climate_opinion[2:7])
 
 corrplot(cor_df,
          type = "upper",
-         method = "ellipse",
+         method = "square",
          tl.col = "black",
          tl.cex = 0.5)
 
@@ -137,10 +167,10 @@ AIC(climate_lm) #122.45
 AIC(climate_lm_1) #136.56
 AIC(climate_lm_2) #212.61
 AIC(climate_lm_3) #249.83
-AIC(climate_lm_4) #214.90, one of the higher aic values, but model makes the most logical sense
+AIC(climate_lm_4) #214.90, one of the higher aic values, but model makes the most logical sense and vif has better values than more saturated models
 ```
 
-
+**Table X. Climate Change Opinions Regression Results.** Multiple linear regression results modeling the effect of information exposure, education attainment, poverty levels and coastline on the proportion of people who believe that global warming is happening. This model [proportion of people who believe global warming is happening = 0.36 (percentage with bachelors) + 0.34 (poverty rate) + 2.54 (state with coastline) + 0.64 (percentage who discuss)] explains a significant amount of the variance in climate change opinions [F(4,46) = 77.66, p <0.001, Adjusted R$^2$ = 0.86].
 ```{r 1c, results = 'asis', header = FALSE, echo = FALSE}
 #c. A finalized table of results for your analyses (you may present more than one model), with a figure caption.
 
@@ -148,7 +178,6 @@ lm_table <- stargazer(climate_lm_4,
           type = 'html', 
           digits = 2,
           style = "aer",
-          title = "Table X: Climate Opinion Regression Results", 
           dep.var.labels = c("Global Warming is Happening"),
           covariate.labels = c("Bachelors Degree",
                                "Poverty Rate",
@@ -163,11 +192,11 @@ lm_table <- stargazer(climate_lm_4,
 #d. Choose two coefficients in the model that you find interesting (either because they are expected or unexpected). For each, write a single sentence explaining what that coefficient means in terms of an expected change in the dependent variable.
 
 ```
-
-It is interesting yet expected that the proportion of people who think global warming is happening is 2.5% greater among people who live in states with coastline when compared to those living in states without coastline.
+<br>
+It is interesting yet expected that, all else equal, the proportion of people who think global warming is happening increases by 2.5 among respondents who live in states with coastline when compared to those living in states without coastline.
 <br>
 <br>
-Another interesting and surprising coefficient is that the proportion of respondents whi think global warming is happening is only 0.36% greater among people who recieved a Bachelors degree than among those who do not have a Bachelors degree. 
+An interesting and surprising coefficient is the effect of a Bachelors degree on the proportion of people who believe global warming is happening, which increases by only 0.36 for every one unit increase in the proportion of respondents with a Bachelors degree, if everything else is held constant. 
 
 ```{r, include=FALSE}
 #e. Based on diagnostic plots, describe (1 - 2 sentences) if you have concerns about heteroscedasticity or normality of residuals for your model(s). You do not need to include the diagnostic plots in your final document.
@@ -177,7 +206,7 @@ plot(climate_lm_4)
 
 
 ```
-The model presented does not present significant concerns for homoscedasticity and the residual variance seems normal. The assumption of normality presents a slight cause for concern, as the upper and lower tail of the residuals does not follow a pattern of normal distribution, however the majority of the residuals do appear to be normally distributed. 
+The model presented does not present significant concerns for homoscedasticity and the distribution of residual variances appears to be even. The assumption of normality presents a slight cause for concern, as the upper and lower tail of the residuals does not follow a pattern of normal distribution, however the majority of the residuals do appear to be normally distributed. 
 
 ###PART 2.
 
@@ -193,7 +222,7 @@ The model presented does not present significant concerns for homoscedasticity a
 # H0: there is no effect
 
 ```
-In order to determine if there is a significant effect of race on individual's perception of campus respect at UCSB, a chi-square test is used to test if proportions of respondents in different groups are significantly different. 
+In order to determine if there is a significant effect of race on an individual's perception of campus respect at UCSB, a chi-square test is used to test if proportions of respondents between groups are significantly different. The research question this test will answer is "Does race have a significant effect on responses to the perception of overall campus climate at UCSB"?
 
 
 ```{r 2b, include = FALSE}
@@ -204,7 +233,7 @@ In order to determine if there is a significant effect of race on individual's p
 ucsb_climate_chi <- ucsb_climate %>% 
   select(-race)
 
-rownames(ucsb_climate_chi) <- c("AfricanAmerican", "AmericanIndian", "Asian", "Hispanic", "MiddleEastern", "PacificIslander", "White") 
+rownames(ucsb_climate_chi) <- c("African American/African/Black", "American Indian/Alaskan Native", "Asian/Asian American", "Hispanic/Latino", "Middle Eastern/South Asian/North African", "Pacific Islander", "White") 
 
 # make a proportion table
 prop_table <- prop.table(as.matrix(ucsb_climate_chi), 1)
@@ -219,20 +248,26 @@ chi_test
 # p < 0.001
 
 ```
-Based on results from the UCSB Campus Climate Survey (2014), race identity of respondents had a significant effect on the perception of campus climate [($\chi^2$(`r chi_test$parameter`) = `r round(chi_test$statistic, 0)`,  p < 0.001.]
+Based on results from the UCSB Campus Climate Survey (2014), race identity of respondents has a significant effect on the perception of campus climate [$\chi^2$(`r chi_test$parameter`) = `r round(chi_test$statistic, 0)`,  p < 0.001.]
 
 
 
-TABLE CAPTION
+**Table X. Proportions of Student Responses to UCSB Campus Climate Survey by Race.** Proportion of responses by race to UCSB Campus Climate Survey question asking respondents to indicate their race identity and their perception of overall campus climate as either "Very Respectful", "Respectful", "Disrespectful", or "Very Disrespectful". Race identity has a significant effect on the perception of campus climate [$\chi^2$(`r chi_test$parameter`) = `r round(chi_test$statistic, 0)`,  p < 0.001].
+<br>
 ```{r 2c, echo = FALSE}
 #c. A finalized figure or table that clearly shows counts and/or proportions of respondents’ perceptions of campus respect for each race/ethnicity reporting. Include a caption.
 
-respect_table <- kable(ucsb_climate, col.names = c("Race", "Very Respectful", "Respectful", "Disrespectful", "Very Disrespectful"), align = "l") %>% 
+# respect_table <- kable(ucsb_climate, col.names = c("Race", "Very Respectful", "Respectful", "Disrespectful", "Very Disrespectful"), align = "l") %>% 
+ # kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
+
+
+#respect_table 
+
+
+respect_prop <- kable(round(prop_table,2), col.names = c("Very Respectful", "Respectful", "Disrespectful", "Very Disrespectful"), align = "l") %>% 
   kable_styling(bootstrap_options = c("striped"), full_width = FALSE)
 
-
-respect_table 
-
+respect_prop
 ```
 
 
@@ -240,7 +275,7 @@ respect_table
 #d. A concise 2 - 3 sentence discussion of interesting differences and/or similarities across groups, and notable big picture trends.
 
 ```
-The results show that the majority of each race group would classifiy the campus environment at UCSB as respectful or very respectful, however there were larger proportions of respodents that felt the campus environment was either disrespectful or very disrespectful within the African American, Hispanic and Middle Eastern groups. Additionally, for all race groups except White, more a larger portion of respondents felt the campus was respectful compared to very respectful, while responses within White students were nearly equal for both respectful and very respectful. 
+The results show that the majority of each race group would classifiy the campus environment at UCSB as respectful or very respectful, however there were larger proportions of respodents that felt the campus environment was either disrespectful or very disrespectful within the African American (10%), Hispanic (9%) and Middle Eastern (10%) groups. Additionally, for all race groups except White, a larger portion of respondents felt the campus was respectful compared to very respectful, while responses within White students were equal for both respectful and very respectful (49%). 
 
 ###PART 3. 
 ```{r 3, include=FALSE}
@@ -265,7 +300,7 @@ summary(blr)
 ```
 
 
-TABLE CAPTION
+**Table X. Effects of Sex and Age on Self Consciousness.** Binary linear regression modeling the effects of age and sex on a respondent's answer ("True" or "False") to the statement "I am usually self-conscious". The model shows that age has a significant effect on respondent's answers ($\beta$ = -0.033, p < 0.001, $\alpha$ = 0.05) while sex does not significantly effect the outcome ($\beta$ = -0.014, p = 0.863, $\alpha$ = 0.05). 
 ```{r 3a, results = 'asis', header = FALSE, echo = FALSE}
 
 #a. A finalized table of model results and statistics. Include a table caption.
@@ -274,7 +309,6 @@ blr_table <- stargazer(blr,
           type = 'html', 
           digits = 2,
           style = "aer",
-          title = "Table X: Effects of Sex and Age on Self Consciousness", 
           dep.var.labels = c("Self Conscious"),
           covariate.labels = c("Age",
                                "Sex"))
@@ -285,9 +319,7 @@ blr_table <- stargazer(blr,
 
 
 
-
-
-
+<br>
 ```{r 3b, echo = FALSE}
 #b. A finalized graph showing predicted probabilities for True/False responses, separated by sex over a range of ages, with standard errors included. You do NOT need to include a figure caption.
 
@@ -315,11 +347,14 @@ colnames(graph_data) <- c("Age", "Sex", "Probability", "SE")
 # graph predicted probabilities with standard error ribbons
 ggplot(graph_data, aes(x = Age, y = Probability))+
   facet_wrap(~Sex)+
-  geom_line(aes(color = Sex))+
-  geom_ribbon(aes(ymin = Probability - SE, ymax = Probability + SE, fill = Sex), alpha = 0.5)+
+  geom_line(aes(color = Sex), show.legend = FALSE)+
+  geom_ribbon(aes(ymin = Probability - SE, ymax = Probability + SE, fill = Sex), show.legend = FALSE, alpha = 0.5)+
   theme_minimal()+
   scale_y_continuous(expand = c(0,0),
-                     limits = c(0,1))
+                     limits = c(0,1))+
+  labs(y = "Probability (True)",
+       x = "Age",
+       title = "Predicted Probability by Age of Males and Females \nResponding True to the Statement: I Am Usually Self Conscious.")
 
 ```
 
@@ -336,7 +371,7 @@ ggplot(graph_data, aes(x = Age, y = Probability))+
 
 ```
 
-The graph shows a clear trend among both sexes that as age increases, the probability of a respondent answering "True" to the statement "I am usually self-conscious" decreases, an effect that was significant based on the binomal linear regression. Alternately, sex does not have a significant effect on respondent answers, as can be seen by the similar predicted probabilities between males and females. 
+The graph shows a clear trend among both sexes that as age increases, the probability of a respondent answering "True" to the statement "I am usually self-conscious" decreases, an effect that was significant based on the binomal linear regression ($\beta$ = -0.033, p < 0.001, $\alpha$ = 0.05). Alternately, sex does not have a significant effect on respondent answers, as can be seen by the similar trend in predicted probabilities between males and females ($\beta$ = -0.014, p = 0.863, $\alpha$ = 0.05). 
 
 
 
@@ -345,7 +380,6 @@ The graph shows a clear trend among both sexes that as age increases, the probab
 #Is there a significant difference in pyraclostrobin concentrations in strawberries (STRAWBERRY (ALL OR UNSPEC)) and carrots (CARROTS (ROOT CROP))? use PesticideResidues dataframe
 
 ```
-
 
 
 ```{r 4a, echo = FALSE}
@@ -411,7 +445,7 @@ cliffs
 # cliff's delta = 0.695 (large)
 
 ```
-Based on the data of pesticide residues from the California Department of Pesticide Regulation, there is a significant difference in median pesticide quantity detected between carrots and strawberries [W = `r test$statistic`, p < 0.001] and the effect size is large (cliff's delta = `r cliffs$estimate`). 
+Based on the data of pesticide residues from the California Department of Pesticide Regulation, there is a significant difference in median pesticide concentration detected between carrots and strawberries [W = `r test$statistic`, p < 0.001] and the effect size is large (cliff's delta = `r cliffs$estimate`). 
 
 
 
@@ -449,6 +483,7 @@ pesticide_graph <- ggplot(pesticide_factor, aes(x = county, y = pounds_per_mile)
   scale_y_continuous(expand = c(0,0),
                      limits = c(0,9000),
                      breaks = seq(0,9000, by = 1000))+
+  scale_x_discrete(expand = c(0,0))+
   theme(axis.text.x = element_text(angle = 45, hjust = .9))+
   labs(x = "County",
        y = "Pesticide Applied \n(pounds per square mile)",
